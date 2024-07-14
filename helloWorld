@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Three.js GLTF Loader</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script>
+        // Crear la escena, la cámara y el renderizador
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Añadir una luz básica
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // luz ambiental
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // luz direccional
+        directionalLight.position.set(5, 10, 7.5);
+        scene.add(directionalLight);
+
+        // Posicionar y rotar la cámara basado en los valores de Blender
+        camera.position.set(7, -7, 5) // Posición de la cámara
+        //camera.rotation.set(30 * Math.PI / 180, 45 * Math.PI / 180, 0 * Math.PI / 180); // Rotación de la cámara en radianes
+        camera.rotation.set(63.6 * Math.PI / 180, 45 * Math.PI / 180, 46.7 * Math.PI / 180); // Rotación de la cámara en radianes
+
+        // Cargar el modelo GLTF
+        const loader = new THREE.GLTFLoader();
+        loader.load(
+            'models/CubeAnimation.glb', // Reemplaza con la ruta a tu archivo GLB
+            function (gltf) {
+                scene.add(gltf.scene);
+                
+                // Animar el modelo
+                const mixer = new THREE.AnimationMixer(gltf.scene);
+                gltf.animations.forEach((clip) => {
+                    mixer.clipAction(clip).play();
+                });
+
+                // Función de animación
+                const clock = new THREE.Clock();
+                function animate() {
+                    requestAnimationFrame(animate);
+
+                    // Actualizar el mixer
+                    const delta = clock.getDelta();
+                    mixer.update(delta);
+
+                    renderer.render(scene, camera);
+                }
+                animate();
+            },
+            undefined,
+            function (error) {
+                console.error('An error happened', error);
+            }
+        );
+
+        // Manejar el redimensionamiento de la ventana
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
